@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.magmaguy.elitemobs.utils.ClassFinder;
 
 import java.util.HashSet;
+import java.util.List;
 
 public class ElitePower {
 
