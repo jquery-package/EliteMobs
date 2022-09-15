@@ -41,6 +41,7 @@ public class CustomConfig {
                     new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
                     ex.printStackTrace();
                 }
+            }
         });
 
         //Check if the directory doesn't exist
