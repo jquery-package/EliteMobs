@@ -2,9 +2,9 @@ package com.magmaguy.elitemobs.config;
 
 import com.magmaguy.elitemobs.MetadataHandler;
 import com.magmaguy.elitemobs.utils.WarningMessage;
-import com.magmaguy.elitemobs.utils.ClassFinder;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.reflections.Reflections;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,16 +31,17 @@ public class CustomConfig {
     public CustomConfig(String folderName, String packageName, Class<? extends CustomConfigFields> customConfigFields) {
         this.folderName = folderName;
         this.customConfigFields = customConfigFields;
-        
-        List<Class<?>> classSet = ClassFinder.find(packageName);
+
+        //Set defaults through reflections by getting everything that extends specific CustomConfigFields within specific package scopes
+        Reflections reflections = new Reflections(packageName);
+
+        Set<Class> classSet = new HashSet<>(reflections.getSubTypesOf(customConfigFields));
         classSet.forEach(aClass -> {
-            if (customConfigFields.isAssignableFrom(aClass)) {
-                try {
-                    customConfigFieldsArrayList.add(aClass.newInstance());
-                } catch (Exception ex) {
-                    new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
-                    ex.printStackTrace();
-                }
+            try {
+                customConfigFieldsArrayList.add(aClass.newInstance());
+            } catch (Exception ex) {
+                new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
+                ex.printStackTrace();
             }
         });
 
