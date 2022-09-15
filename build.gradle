@@ -151,9 +151,7 @@ shadowJar {
         relocate('io.leangen.geantyref', packagePath + '.geantyref')
         relocate('org.reflections', packagePath + '.reflections')
     }
-    archiveClassifier.set(null)
-    archiveFileName.set(project.name + ".jar")
-    destinationDirectory.set(new File("testbed/plugins"))
+    archiveFileName = "${project.name}-${project.version}.jar"
 }
 
 tasks.withType(JavaCompile) {
