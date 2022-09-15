@@ -49,7 +49,6 @@ import com.magmaguy.elitemobs.playerdata.database.PlayerData;
 import com.magmaguy.elitemobs.powerstances.MajorPowerStanceMath;
 import com.magmaguy.elitemobs.powerstances.MinorPowerStanceMath;
 import com.magmaguy.elitemobs.quests.QuestTracking;
-import com.magmaguy.elitemobs.thirdparty.bstats.CustomCharts;
 import com.magmaguy.elitemobs.thirdparty.libsdisguises.DisguiseEntity;
 import com.magmaguy.elitemobs.thirdparty.modelengine.ModelEngineReservedAddresses;
 import com.magmaguy.elitemobs.thirdparty.placeholderapi.Placeholders;
@@ -61,7 +60,6 @@ import com.magmaguy.elitemobs.utils.WarningMessage;
 import com.magmaguy.elitemobs.versionnotifier.VersionChecker;
 import com.magmaguy.elitemobs.worlds.CustomWorldLoading;
 import com.magmaguy.elitemobs.wormhole.Wormhole;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -80,7 +78,6 @@ public class EliteMobs extends JavaPlugin {
     public static boolean worldGuardIsEnabled = false;
     public static List<World> zoneBasedSpawningWorlds = new ArrayList<>();
     public static List<World> nightmareWorlds = new ArrayList<>();
-    public static Metrics metrics;
     public Object placeholders = null;
 
     public static void initializeConfigs() {
@@ -220,11 +217,6 @@ public class EliteMobs extends JavaPlugin {
             this.placeholders = placeholders;
         }
 
-        //Enable stats
-        metrics = new Metrics(this, 1081);
-        //Initialize custom charts
-        new CustomCharts();
-
         //Imports custom configurations and mindungeons from the import folder
         ConfigurationImporter.initializeConfigs();
         ConfigurationExporter.initializeConfigs();
@@ -281,9 +273,6 @@ public class EliteMobs extends JavaPlugin {
         }
 
         new CustomQuestsConfig();
-
-        //Commands
-        new CommandHandler();
 
         /*
         Check for new plugin version or for dungeon updates
