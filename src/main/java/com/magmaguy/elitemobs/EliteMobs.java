@@ -58,7 +58,6 @@ import com.magmaguy.elitemobs.utils.WarningMessage;
 import com.magmaguy.elitemobs.versionnotifier.VersionChecker;
 import com.magmaguy.elitemobs.worlds.CustomWorldLoading;
 import com.magmaguy.elitemobs.wormhole.Wormhole;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -77,7 +76,6 @@ public class EliteMobs extends JavaPlugin {
     public static boolean worldGuardIsEnabled = false;
     public static List<World> zoneBasedSpawningWorlds = new ArrayList<>();
     public static List<World> nightmareWorlds = new ArrayList<>();
-    public static Metrics metrics;
     public Object placeholders = null;
 
     public static void initializeConfigs() {
@@ -216,11 +214,6 @@ public class EliteMobs extends JavaPlugin {
             placeholders.register();
             this.placeholders = placeholders;
         }
-
-        //Enable stats
-        metrics = new Metrics(this, 1081);
-        //Initialize custom charts
-        new CustomCharts();
 
         //Imports custom configurations and mindungeons from the import folder
         ConfigurationImporter.initializeConfigs();
