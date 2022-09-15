@@ -4,7 +4,7 @@ import com.magmaguy.elitemobs.MetadataHandler;
 import com.magmaguy.elitemobs.utils.WarningMessage;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.reflections.Reflections;
+import com.magmaguy.elitemobs.utils.ClassFinder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,17 +32,15 @@ public class CustomConfig {
         this.folderName = folderName;
         this.customConfigFields = customConfigFields;
 
-        //Set defaults through reflections by getting everything that extends specific CustomConfigFields within specific package scopes
-        Reflections reflections = new Reflections(packageName);
-
-        Set<Class> classSet = new HashSet<>(reflections.getSubTypesOf(customConfigFields));
+        List<Class<?>> classSet = ClassFinder.find(packageName);
         classSet.forEach(aClass -> {
-            try {
-                customConfigFieldsArrayList.add(aClass.newInstance());
-            } catch (Exception ex) {
-                new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
-                ex.printStackTrace();
-            }
+            if (customConfigFields.isAssignableFrom(aClass)) {
+                try {
+                    customConfigFieldsArrayList.add(aClass.newInstance());
+                } catch (Exception ex) {
+                    new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
+                    ex.printStackTrace();
+                }
         });
 
         //Check if the directory doesn't exist
