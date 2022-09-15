@@ -11,7 +11,7 @@ import lombok.Setter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.reflections.Reflections;
+import com.magmaguy.elitemobs.utils.ClassFinder;
 
 import java.util.HashSet;
 
@@ -98,14 +98,16 @@ public class ElitePower {
     }
 
     private static void initializePackage(String specificPackage, HashSet<ElitePower> elitePowers) {
-        Reflections reflections = new Reflections("com.magmaguy.elitemobs.powers." + specificPackage);
-        reflections.getSubTypesOf(ElitePower.class).forEach(power -> {
-            try {
-                elitePowers.add(power.newInstance());
-            } catch (Exception ex) {
-                //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
-                //todo: figure out why package scanning is getting more than what is in the packages here
-                //new WarningMessage("Failed to initialize power " + specificPackage + " " + power.getName());
+        List<Class<?>> classes = ClassFinder.find("com.magmaguy.elitemobs.powers." + specificPackage);
+        classes.forEach(power -> {
+            if (ElitePower.class.isAssignableFrom(power)) {
+                try {
+                   elitePowers.add(power.newInstance());
+                } catch (Exception ex) {
+                    //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
+                    //todo: figure out why package scanning is getting more than what is in the packages here
+                    //new WarningMessage("Failed to initialize power " + specificPackage + " " + power.getName());
+                }
             }
         });
     }
