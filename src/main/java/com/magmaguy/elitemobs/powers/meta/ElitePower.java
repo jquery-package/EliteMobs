@@ -103,7 +103,7 @@ public class ElitePower {
         classes.forEach(power -> {
             if (ElitePower.class.isAssignableFrom(power)) {
                 try {
-                   elitePowers.add(power.newInstance());
+                   elitePowers.add((ElitePower)power.newInstance());
                 } catch (Exception ex) {
                     //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
                     //todo: figure out why package scanning is getting more than what is in the packages here
