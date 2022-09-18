@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public final class ClassFinder {
 
-    public final static List<Class<?>> find(String packageName) {
+    public static List<Class<?>> find(String packageName) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream stream = classLoader.getResourceAsStream(packageName.replaceAll("[.]", "/"));
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
@@ -21,7 +21,7 @@ public final class ClassFinder {
           .collect(Collectors.toSet());
     }
  
-    private final static Class getClass(String className, String packageName) {
+    private static Class<?> getClass(String className, String packageName) {
         try {
             return Class.forName(packageName + "." + className.substring(0, className.lastIndexOf('.')));
         } catch (ClassNotFoundException ignored) {
