@@ -10,6 +10,7 @@ public final class ClassFinder {
 
     public static List<Class<?>> find(String packageName) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        System.out.println("package=" + packageName.replaceAll("[.]", "/"));
         InputStream stream = classLoader.getResourceAsStream(packageName.replaceAll("[.]", "/"));
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         return reader.lines()
