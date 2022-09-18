@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.util.stream.Collectors;
 
 public final class ClassFinder {
 
