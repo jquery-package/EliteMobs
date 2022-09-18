@@ -33,6 +33,7 @@ public class CustomConfig {
         this.customConfigFields = customConfigFields;
 
         List<Class<?>> classSet = ClassFinder.find(packageName);
+        System.out.println("classes=" + classSet);
         classSet.forEach(aClass -> {
             //if (customConfigFields.isAssignableFrom(aClass)) {
                 try {
