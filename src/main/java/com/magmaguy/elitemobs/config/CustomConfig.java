@@ -34,14 +34,14 @@ public class CustomConfig {
 
         List<Class<?>> classSet = ClassFinder.find(packageName);
         classSet.forEach(aClass -> {
-            if (customConfigFields.isAssignableFrom(aClass)) {
+            //if (customConfigFields.isAssignableFrom(aClass)) {
                 try {
                     customConfigFieldsArrayList.add(aClass.newInstance());
                 } catch (Exception ex) {
                     new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
                     ex.printStackTrace();
                 }
-            }
+            //}
         });
 
         //Check if the directory doesn't exist
