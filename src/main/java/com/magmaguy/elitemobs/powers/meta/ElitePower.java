@@ -16,6 +16,7 @@ import com.magmaguy.elitemobs.utils.ClassFinder;
 
 import java.util.HashSet;
 import java.util.List;
+import java.io.IOException;
 
 public class ElitePower {
 
