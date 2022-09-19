@@ -100,7 +100,14 @@ public class ElitePower {
     }
 
     private static void initializePackage(String specificPackage, HashSet<ElitePower> elitePowers) {
-        List<Class<?>> classes = ClassFinder.find("com.magmaguy.elitemobs.powers." + specificPackage);
+        List<Class<?>> classes;
+        try {
+            classes = ClassFinder.find("com.magmaguy.elitemobs.powers." + specificPackage);
+        } catch (IOException ex) {
+            new WarningMessage("Failed to initialize power " + specificPackage + " " + power.getName());
+            ex.printStackTrace();
+            return;
+        }
         classes.forEach(power -> {
             if (ElitePower.class.isAssignableFrom(power)) {
                 try {
@@ -108,7 +115,7 @@ public class ElitePower {
                 } catch (Exception ex) {
                     //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
                     //todo: figure out why package scanning is getting more than what is in the packages here
-                    //new WarningMessage("Failed to initialize power " + specificPackage + " " + power.getName());
+                    //
                 }
             }
         });
