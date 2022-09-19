@@ -34,7 +34,7 @@ public class CustomConfig {
 
         List<Class<?>> classSet;
         try {
-            classSet = ClassFinder.find(packageName)   
+            classSet = ClassFinder.find(packageName);
         } catch (IOException ex) {
             new WarningMessage("Failed to generate plugin default files for " + folderName + " ! This is very bad, warn the developer!");
             ex.printStackTrace();
