@@ -32,18 +32,23 @@ public class CustomConfig {
         this.folderName = folderName;
         this.customConfigFields = customConfigFields;
 
-        List<Class<?>> classSet = ClassFinder.find(packageName);
-        System.out.println("package=" + packageName);
-        System.out.println("classes=" + classSet);
+        List<Class<?>> classSet;
+        try {
+            classSet = ClassFinder.find(packageName)   
+        } catch (IOException ex) {
+            new WarningMessage("Failed to generate plugin default files for " + folderName + " ! This is very bad, warn the developer!");
+            ex.printStackTrace();
+            return;
+        }
         classSet.forEach(aClass -> {
-            //if (customConfigFields.isAssignableFrom(aClass)) {
+            if (customConfigFields.isAssignableFrom(aClass)) {
                 try {
                     customConfigFieldsArrayList.add(aClass.newInstance());
                 } catch (Exception ex) {
                     new WarningMessage("Failed to generate plugin default classes for " + folderName + " ! This is very bad, warn the developer!");
                     ex.printStackTrace();
                 }
-            //}
+            }
         });
 
         //Check if the directory doesn't exist
