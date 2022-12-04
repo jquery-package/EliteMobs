@@ -12,10 +12,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.reflections.Reflections;
+import com.magmaguy.elitemobs.utils.ClassFinder;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.io.IOException;
 
 public class ElitePower {
 
@@ -85,22 +87,31 @@ public class ElitePower {
     }
 
     public static void initializePowers() {
-        Reflections reflections = new Reflections("com.magmaguy.elitemobs.powers");
-        reflections.getSubTypesOf(ElitePower.class).forEach(power -> {
-            try {
-                ElitePower thisPower = power.newInstance();
-                switch (((PowersConfigFields) thisPower.getPowersConfigFields()).getPowerType()) {
-                    case DEFENSIVE -> defensivePowers.add(thisPower.getPowersConfigFields());
-                    case OFFENSIVE -> offensivePowers.add(thisPower.getPowersConfigFields());
-                    case MAJOR_BLAZE, MAJOR_ENDERMAN, MAJOR_SKELETON, MAJOR_GHAST, MAJOR_ZOMBIE ->
-                            majorPowers.add(thisPower.getPowersConfigFields());
-                    case MISCELLANEOUS -> miscellaneousPowers.add(thisPower.getPowersConfigFields());
+        List<Class<?>> classes;
+        try {
+            classes = ClassFinder.find("com.magmaguy.elitemobs.powers");
+        } catch (IOException ex) {
+            new WarningMessage("Failed to initialize powers");
+            ex.printStackTrace();
+            return;
+        }
+        classes.forEach(power -> {
+            if (ElitePower.class.isAssignableFrom(power)) {
+                try {
+				   ElitePower thisPower = (ElitePower)power.newInstance();
+                   switch (((PowersConfigFields) thisPower.getPowersConfigFields()).getPowerType()) {
+                       case DEFENSIVE -> defensivePowers.add(thisPower.getPowersConfigFields());
+                       case OFFENSIVE -> offensivePowers.add(thisPower.getPowersConfigFields());
+                       case MAJOR_BLAZE, MAJOR_ENDERMAN, MAJOR_SKELETON, MAJOR_GHAST, MAJOR_ZOMBIE ->
+                               majorPowers.add(thisPower.getPowersConfigFields());
+                       case MISCELLANEOUS -> miscellaneousPowers.add(thisPower.getPowersConfigFields());
+                   }
+                   elitePowers.put(thisPower.getFileName(), thisPower.getPowersConfigFields());
+                } catch (Exception ex) {
+                    //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
+                    //todo: figure out why package scanning is getting more than what is in the packages here
+                    //
                 }
-                elitePowers.put(thisPower.getFileName(), thisPower.getPowersConfigFields());
-            } catch (Exception ex) {
-                //Not sure why stuff in the meta package is getting scanned, seems like the package scan isn't working as intended
-                //todo: figure out why package scanning is getting more than what is in the packages here
-                //new WarningMessage("Failed to initialize power " + power.getName());
             }
         });
     }

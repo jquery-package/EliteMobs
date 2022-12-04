@@ -143,7 +143,7 @@ public class DungeonInstance extends MatchInstance {
         super.startMatch();
         new EventCaller(new DungeonStartEvent(this));
     }
-
+	
     //Runs when the instance starts, adjusting boss health to the amount of players in the instance
     private void updateBossHealth() {
         instancedBossEntities.forEach(instancedBossEntity -> {
