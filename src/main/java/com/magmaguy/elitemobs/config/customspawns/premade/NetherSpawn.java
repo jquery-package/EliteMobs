@@ -6,17 +6,10 @@ import org.bukkit.World;
 import java.util.List;
 
 public class NetherSpawn extends CustomSpawnConfigFields {
-<<<<<<< HEAD
-    public NetherSpawn(){
-        super("nether_spawn", true);
-        setCanSpawnInLight(true);
-        setValidWorldEnvironments(List.of(World.Environment.NETHER));
-=======
     public NetherSpawn() {
         super("nether_spawn", true);
         setCanSpawnInLight(true);
         setValidWorldEnvironments(List.of(World.Environment.NETHER));
         setUndergroundSpawn(true);
->>>>>>> master
     }
 }
