@@ -56,12 +56,6 @@ public abstract class MatchInstance {
     private int maxZ;
     private World world;
     private boolean cylindricalArena;
-    private final Map<Player, Location> previousPlayerLocations = new HashMap<>();
-    private Cylinder cylinder;
-    protected int minPlayers;
-    protected int maxPlayers;
-    protected World world;
-
 
     public MatchInstance(Location startLocation, Location exitLocation, int minPlayers, int maxPlayers) {
         this.startLocation = startLocation;

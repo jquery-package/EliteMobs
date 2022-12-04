@@ -91,7 +91,7 @@ public class ElitePower {
         try {
             classes = ClassFinder.find("com.magmaguy.elitemobs.powers");
         } catch (IOException ex) {
-            new WarningMessage("Failed to initialize powers " + specificPackage);
+            new WarningMessage("Failed to initialize powers");
             ex.printStackTrace();
             return;
         }

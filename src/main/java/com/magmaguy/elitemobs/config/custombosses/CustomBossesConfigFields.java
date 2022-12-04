@@ -198,12 +198,7 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
     @Getter
     @Setter
     private ConfigurationSection rawEliteScripts = null;
-    @Getter
-    private List<EliteScript> eliteScript = null;
-    @Getter
-    @Setter
-    private String song = null;
-
+	@Getter
     private List<EliteScriptBlueprint> eliteScript = new ArrayList<>();
     @Getter
     @Setter

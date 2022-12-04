@@ -1,4 +1,4 @@
-package com.magmaguy.elitemobs.powers.miscellaneouspowers;
+package com.magmaguy.elitemobs.powers;
 
 import com.magmaguy.elitemobs.MetadataHandler;
 import com.magmaguy.elitemobs.config.powers.PowersConfig;
