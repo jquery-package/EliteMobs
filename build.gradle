@@ -1,0 +1,205 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'maven-publish'
+    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id 'signing'
+}
+
+//Fixes issues related to special characters being used
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+//Fixes issues with utf-8 in the translations files. Why? Don't know.
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+group 'com.magmaguy'
+version '8.1.1-SNAPSHOT'
+
+repositories {
+    maven {
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+
+        // As of Gradle 5.1, you can limit this to only those
+        // dependencies you expect from it
+        content {
+            includeGroup 'org.bukkit'
+            includeGroup 'org.spigotmc'
+        }
+    }
+
+    mavenCentral()
+    jcenter()
+    mavenLocal()
+
+    //Spigot API & CloudCommands
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url = 'https://oss.sonatype.org/content/repositories/central' }
+
+    maven { url "https://hub.spigotmc.org/nexus/content/repositories/snapshots" }
+
+    //Bstats API
+    maven { url = 'https://repo.codemc.org/repository/maven-public' }
+    //CloudCommands
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+    //Vault
+    maven { url = 'https://jitpack.io' }
+    //DiscordSRV
+    maven { url = 'https://m2.dv8tion.net/releases/' }
+    maven { url = 'https://nexus.scarsz.me/content/groups/public/' }
+    //LibsDisguises
+    maven { url = 'https://repo.md-5.net/content/groups/public/' }
+    //PlaceholderAPI
+    maven { url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
+
+    //WorldGuard API
+    maven { url = 'https://maven.enginehub.org/repo/' }
+
+    //Model Engine
+    maven {
+        url = 'https://mvn.lumine.io/repository/maven-public/'
+        metadataSources {
+            artifact()
+        }
+    }
+
+    //Geyser
+    maven { url = 'https://repo.opencollab.dev/main/' }
+
+}
+
+dependencies {
+    //Spigot API
+    compileOnly "org.spigotmc:spigot-api:1.19-R0.1-SNAPSHOT"
+
+    // The full CraftBukkit server with no shadowing. Requires mavenLocal.
+    //WorldGuard API
+    compileOnly group: 'com.sk89q.worldguard', name: 'worldguard-bukkit', version: '7.0.7'
+    //WorldGuard API
+    compileOnly group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.2.12'
+    //Vault
+    //compileOnly group: 'com.github.MilkBowl', name: 'VaultAPI', version: '1.7'
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
+    //DiscordSRV
+    compileOnly 'com.discordsrv:discordsrv:1.24.0'
+    //SQLite
+    compileOnly group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3'
+    //LibsDisguises
+    compileOnly group: 'com.comphenix.protocol', name: 'ProtocolLib', version: '4.7.0';
+    compileOnly group: 'LibsDisguises', name: 'LibsDisguises', version: '10.0.26'
+    //PlaceholderAPI
+    compileOnly group: 'me.clip', name: 'placeholderapi', version: '2.10.9'
+
+    //lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    //Model Engine
+    compileOnly "com.ticxo.modelengine:api:R3.0.0"
+    
+    compileOnly('net.kyori:adventure-platform-bukkit:4.1.1')
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    //Geyser for bedrock player detection
+    //This needs java 16 to work so you will want to change gradle.properties to match your directory for it
+    //compileOnly("org.geysermc:geyser-api:2.0.2-SNAPSHOT") disabled because I couldn't find an easy way to see if a player is using geyser through their api due to the bungeecord / waterfall specific implementations
+
+}
+
+artifacts { // task 'build' runs generates uberjar
+    archives shadowJar
+}
+
+jar {
+    archiveClassifier.set('min') // we want the Uberjar to be distributed, this is the minified version
+}
+
+String packagePath = 'com.magmaguy.shaded'
+
+// Relocating a Package
+shadowJar {
+    dependencies {
+        relocate('org.bstats', packagePath + '.bstats')
+        relocate('cloud.commandframework', packagePath + '.cloud')
+        relocate('net.kyori', packagePath + '.adventure-platform-bukkit')
+        relocate('io.leangen.geantyref', packagePath + '.geantyref')
+        relocate('org.reflections', packagePath + '.reflections')
+    }
+    archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+ext {
+    resourceTokens = [
+            'Version': version
+    ]
+}
+
+processResources {
+    filter ReplaceTokens, tokens: resourceTokens
+}
+
+//sonatype repo
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+ext.isReleaseVersion = !version.contains("SNAPSHOT")
+
+publishing {
+    repositories {
+        maven {
+            def releaseRepo = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            credentials {
+                username = project.hasProperty('ossrhUsername') ? ossrhUsername : "Unknown user"
+                password = project.hasProperty('ossrhPassword') ? ossrhPassword : "Unknown password"
+            }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                groupId = 'com.magmaguy'
+                name = 'elitemobs'
+                description = 'EliteMobs repo'
+                url = 'https://example.com/'
+                from components.java
+                licenses {
+                    license {
+                        name = 'GPLV3'
+                        url = 'https://www.gnu.org/licenses/gpl-3.0.en.html'
+                    }
+                }
+            }
+        }
+    }
+}
