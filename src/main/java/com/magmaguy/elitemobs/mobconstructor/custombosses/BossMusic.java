@@ -24,9 +24,17 @@ public class BossMusic {
     @Getter
     private int durationTicks2 = -1;
     private BukkitTask bukkitTask = null;
+<<<<<<< HEAD
 
     //Format: name=rsp.name:length=durations_ms->name=rsp.name:length=duration_ms
     public BossMusic(String rawString) {
+=======
+    private CustomBossEntity customBossEntity;
+
+    //Format: name=rsp.name length=durations_ticks->name=rsp.name length=duration_ticks
+    public BossMusic(String rawString, CustomBossEntity customBossEntity) {
+        this.customBossEntity = customBossEntity;
+>>>>>>> master
         if (!rawString.contains("->")) {
             parse(rawString, 1);
         } else {
@@ -65,7 +73,11 @@ public class BossMusic {
         bukkitTask = new BukkitRunnable() {
             @Override
             public void run() {
+<<<<<<< HEAD
                 if (!customBossEntity.isValid()) {
+=======
+                if (!customBossEntity.exists()) {
+>>>>>>> master
                     stop();
                     return;
                 }
@@ -75,10 +87,20 @@ public class BossMusic {
     }
 
     public void stop() {
+<<<<<<< HEAD
         if (bukkitTask != null)
             bukkitTask.cancel();
         for (Map.Entry<Player, BukkitTask> entry : players.entrySet()) {
             entry.getKey().stopSound(name);
+=======
+        if (bukkitTask != null) {
+            bukkitTask.cancel();
+        }
+        for (Map.Entry<Player, BukkitTask> entry : players.entrySet()) {
+            entry.getKey().stopSound(name);
+            if (name2 != null)
+                entry.getKey().stopSound(name2);
+>>>>>>> master
             entry.getValue().cancel();
         }
     }
@@ -100,6 +122,7 @@ public class BossMusic {
     }
 
     private void startLoopingTask(Player player, int durationTicks) {
+<<<<<<< HEAD
         BukkitTask songTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -113,6 +136,37 @@ public class BossMusic {
                 startLoopingTask(player, duration);
             }
         }.runTaskLater(MetadataHandler.PLUGIN, durationTicks);
+=======
+        BukkitTask songTask;
+        //Case for a song with no transition
+        if (name2 == null) {
+            songTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!customBossEntity.exists()) {
+                        cancel();
+                        return;
+                    }
+                    player.playSound(player.getLocation(), name,  1f, 1f);
+                }
+            }.runTaskTimer(MetadataHandler.PLUGIN, 0, durationTicks);
+        }
+        //case for a song with a transition
+        else {
+            player.playSound(player.getLocation(), name,  1f, 1f);
+            songTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!customBossEntity.exists()) {
+                        cancel();
+                        return;
+                    }
+                    player.playSound(player.getLocation(), name2, 1f, 1f);
+                }
+            }.runTaskTimer(MetadataHandler.PLUGIN, durationTicks, durationTicks2);
+        }
+
+>>>>>>> master
         players.put(player, songTask);
     }
 }

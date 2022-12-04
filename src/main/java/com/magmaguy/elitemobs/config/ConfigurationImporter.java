@@ -86,8 +86,14 @@ public class ConfigurationImporter {
                         case "wormholes":
                             moveDirectory(file, Paths.get(configurationsPath.normalize() + "" + File.separatorChar + "wormholes"), false);
                             break;
+                        case "powers":
+                            moveDirectory(file, Paths.get(configurationsPath.normalize() + "" + File.separatorChar + "powers"), false);
+                            break;
                         case "worldcontainer":
                             moveWorlds(file);
+                            break;
+                        case "world_blueprints":
+                            moveDirectory(file, Paths.get(configurationsPath.normalize() + "" + File.separatorChar + "world_blueprints"), false);
                             break;
                         case "ModelEngine":
                             //todo: check if the "force" code is required, check if file is getting saved with modelengine doesn't have a configuration folder

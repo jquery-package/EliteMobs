@@ -17,7 +17,6 @@ import com.magmaguy.elitemobs.config.customspawns.CustomSpawnConfig;
 import com.magmaguy.elitemobs.config.customtreasurechests.CustomTreasureChestsConfig;
 import com.magmaguy.elitemobs.config.dungeonpackager.DungeonPackagerConfig;
 import com.magmaguy.elitemobs.config.enchantments.EnchantmentsConfig;
-import com.magmaguy.elitemobs.config.instanceddungeons.InstancedDungeonsConfig;
 import com.magmaguy.elitemobs.config.menus.MenusConfig;
 import com.magmaguy.elitemobs.config.mobproperties.MobPropertiesConfig;
 import com.magmaguy.elitemobs.config.npcs.NPCsConfig;
@@ -166,7 +165,7 @@ public class EliteMobs extends JavaPlugin {
         ModelEngineReservedAddresses.reserve();
 
         if (worldGuardIsEnabled) Bukkit.getLogger().info("[EliteMobs] WorldGuard compatibility is enabled!");
-        else Bukkit.getLogger().warning("[EliteMobs] WorldGuard compatibility is not enabled!");
+        else Bukkit.getLogger().info("[EliteMobs] WorldGuard compatibility is not enabled!");
 
         //Enable Vault
         try {
@@ -249,9 +248,6 @@ public class EliteMobs extends JavaPlugin {
         new WormholeConfig();
         //Arenas
         new CustomArenasConfig();
-        //Instanced dungeons
-        new InstancedDungeonsConfig();
-
 
         //Initialize em package content
         for (EMPackage emPackage : EMPackage.getEmPackages().values())

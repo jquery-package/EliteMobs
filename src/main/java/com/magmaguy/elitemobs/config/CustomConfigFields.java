@@ -6,6 +6,7 @@ import com.magmaguy.elitemobs.utils.ConfigurationLocation;
 import com.magmaguy.elitemobs.utils.ItemStackGenerator;
 import com.magmaguy.elitemobs.utils.WarningMessage;
 import org.bukkit.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -94,6 +95,22 @@ public class CustomConfigFields implements CustomConfigFieldsInterface {
         return value;
     }
 
+
+    public List<Object> processList(String path, List<Object> value, List<Object> pluginDefault, boolean forceWriteDefault) {
+        if (!configHas(path)) {
+            if (forceWriteDefault || value != pluginDefault)
+                fileConfiguration.addDefault(path, value);
+            return value;
+        }
+        try {
+            return new ArrayList<>(Objects.requireNonNull(fileConfiguration.getList(path)));
+        } catch (Exception ex) {
+            new WarningMessage("File " + filename + " has an incorrect entry for " + path);
+            new WarningMessage("Entry: " + value);
+        }
+        return value;
+    }
+
     public List<String> processStringList(String path, List<String> value, List<String> pluginDefault, boolean forceWriteDefault) {
         if (!configHas(path)) {
             if (forceWriteDefault || value != pluginDefault)
@@ -146,7 +163,7 @@ public class CustomConfigFields implements CustomConfigFieldsInterface {
     private List<String> worldListToStringListConverter(List<World> pluginDefault) {
         if (pluginDefault == null) return null;
         List<String> newList = new ArrayList<>();
-        pluginDefault.forEach((element) -> newList.add(element.getName()));
+        pluginDefault.forEach(element -> newList.add(element.getName()));
         return newList;
     }
 
@@ -313,6 +330,25 @@ public class CustomConfigFields implements CustomConfigFieldsInterface {
             new WarningMessage("Entry: " + value);
         }
         return value;
+    }
+
+    public Map<String, Object> processMap(String path, Map<String, Object> value) {
+        if (!configHas(path) && value != null)
+            fileConfiguration.addDefaults(value);
+        if (fileConfiguration.get(path) == null) return Collections.emptyMap();
+        return fileConfiguration.getConfigurationSection(path).getValues(false);
+    }
+
+    public ConfigurationSection processConfigurationSection(String path, Map<String, Object> value) {
+        if (!configHas(path) && value != null)
+            fileConfiguration.addDefaults(value);
+        ConfigurationSection newValue = fileConfiguration.getConfigurationSection(path);
+        if (newValue == null) return null;
+
+        for (String key : newValue.getKeys(true))
+            if (key.equalsIgnoreCase("message"))
+                newValue.set(key, translatable(filename, key, (String) newValue.get(key)));
+        return newValue;
     }
 
     private String itemStackDeserializer(ItemStack itemStack) {

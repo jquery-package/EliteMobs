@@ -89,6 +89,9 @@ public class PlayerDamagedByEliteMobEvent extends Event implements Cancellable {
         @Getter
         @Setter
         private static boolean bypass = false;
+        @Getter
+        @Setter
+        private static double specialMultiplier = 1;
 
         private static double eliteToPlayerDamageFormula(Player player, EliteEntity eliteEntity, EntityDamageByEntityEvent event) {
             double baseDamage = EliteMobProperties.getBaselineDamage(eliteEntity.getLivingEntity().getType(), eliteEntity);
@@ -114,7 +117,7 @@ public class PlayerDamagedByEliteMobEvent extends Event implements Cancellable {
 
             double damageReduction = elitePlayerInventory.getEliteDefense(true);
             if (event.getDamager() instanceof AbstractArrow)
-                damageReduction += elitePlayerInventory.getEliteProjectileProtection(false);
+                damageReduction += elitePlayerInventory.getEliteProjectileProtection(true);
             if (event.getDamager() instanceof Fireball || event.getDamager() instanceof Creeper) {
                 damageReduction += elitePlayerInventory.getEliteBlastProtection(true);
             }
@@ -124,16 +127,18 @@ public class PlayerDamagedByEliteMobEvent extends Event implements Cancellable {
 
             if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE))
                 potionEffectDamageReduction = (player.getPotionEffect(PotionEffectType.DAMAGE_RESISTANCE).
-
                         getAmplifier() + 1) * MobCombatSettingsConfig.getResistanceDamageMultiplier();
 
-            double finalDamage = (baseDamage * customBossDamageMultiplier + bonusDamage - damageReduction - potionEffectDamageReduction) *
+            double finalDamage = ((baseDamage + bonusDamage ) * customBossDamageMultiplier * specialMultiplier - damageReduction - potionEffectDamageReduction ) *
                     MobCombatSettingsConfig.getDamageToPlayerMultiplier();
+
+            if (specialMultiplier != 1) specialMultiplier = 1;
 
             double playerMaxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
 
             //Prevent 1-shots and players getting healed from hits
-            finalDamage = finalDamage < 1 ? 1 : finalDamage > playerMaxHealth ? playerMaxHealth - 1 : finalDamage;
+            finalDamage = Math.max(finalDamage, 1);
+            finalDamage = Math.min(finalDamage, playerMaxHealth - 1);
 
             return finalDamage;
         }

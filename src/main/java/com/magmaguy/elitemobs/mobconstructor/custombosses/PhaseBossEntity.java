@@ -62,7 +62,8 @@ public class PhaseBossEntity {
         }
         customBossEntity.setCustomBossesConfigFields(bossPhase.customBossesConfigFields);
         if (removalReason.equals(RemovalReason.PHASE_BOSS_RESET)) {
-            customBossEntity.setBossMusic(new BossMusic(bossPhase.customBossesConfigFields.getSong()));
+            if (bossPhase.customBossesConfigFields.getSong() != null)
+                customBossEntity.setBossMusic(new BossMusic(bossPhase.customBossesConfigFields.getSong(), customBossEntity));
             customBossEntity.spawn(true);
         } else {
             if (bossPhase.customBossesConfigFields.getPhaseSpawnLocation() != null) {
@@ -76,24 +77,28 @@ public class PhaseBossEntity {
                     customBossEntity.setPersistentLocation(location);
                 } else {
                     customBossEntity.setRespawnOverrideLocation(customBossEntity.getLocation());
-                    customBossEntity.setPersistentLocation(location);
+                    customBossEntity.setPersistentLocation(customBossEntity.getLocation());
                 }
             } else
                 customBossEntity.setRespawnOverrideLocation(customBossEntity.getLocation());
             //Handle music, soundtrack shouldn't change if the new one is the same
             if (bossPhase.customBossesConfigFields.getSong() != null
-                    && currentPhase.customBossesConfigFields.getSong() != null &&
-                    !bossPhase.customBossesConfigFields.getSong().equals(currentPhase.customBossesConfigFields.getSong())) {
-                if (customBossEntity.getBossMusic() != null) customBossEntity.getBossMusic().stop();
-                customBossEntity.setBossMusic(new BossMusic(bossPhase.customBossesConfigFields.getSong()));
+                    && currentPhase.customBossesConfigFields.getSong() != null) {
+                if (!bossPhase.customBossesConfigFields.getSong().equals(currentPhase.customBossesConfigFields.getSong())) {
+                    if (customBossEntity.getBossMusic() != null) customBossEntity.getBossMusic().stop();
+                    customBossEntity.setBossMusic(new BossMusic(bossPhase.customBossesConfigFields.getSong(), customBossEntity));
+                }
             }
+            //Make sure the chunk is loaded so the boss can be initialized properly, or else you'll have some issues with health
+            customBossEntity.getSpawnLocation().getChunk().load();
+            //spawn the boss
             customBossEntity.spawn(true);
         }
-        customBossEntity.setHealth(customBossEntity.getMaxHealth() * healthPercentage);
         currentPhase = bossPhase;
         if (customBossEntity.getCustomModel() != null) customBossEntity.getCustomModel().switchPhase();
         ElitePhaseSwitchEvent elitePhaseSwitchEvent = new ElitePhaseSwitchEvent(customBossEntity, this);
         new EventCaller(elitePhaseSwitchEvent);
+        customBossEntity.setHealth(customBossEntity.getMaxHealth() * healthPercentage);
     }
 
     public void resetToFirstPhase() {
@@ -114,19 +119,21 @@ public class PhaseBossEntity {
         return bossPhases.get(0).customBossesConfigFields;
     }
 
-    public void checkPhaseBossSwitch() {
+    public void checkPhaseBossSwitch(EliteMobDamagedEvent event) {
         if (bossPhases.indexOf(currentPhase) + 1 >= bossPhases.size()) return;
         BossPhase nextBossPhase = bossPhases.get(bossPhases.indexOf(currentPhase) + 1);
-        if (customBossEntity.getHealth() / customBossEntity.getMaxHealth() > nextBossPhase.healthPercentage) return;
-        switchPhase(nextBossPhase, RemovalReason.PHASE_BOSS_PHASE_END, customBossEntity.getHealth() / customBossEntity.getMaxHealth());
+        double newHealth = Math.max((customBossEntity.getHealth() - event.getDamage()) / customBossEntity.getMaxHealth(), 0);
+        if (newHealth > nextBossPhase.healthPercentage) return;
+        event.setCancelled(true);
+        switchPhase(nextBossPhase, RemovalReason.PHASE_BOSS_PHASE_END, nextBossPhase.healthPercentage);
     }
 
     public static class PhaseBossEntityListener implements Listener {
         @EventHandler(ignoreCancelled = true)
         public void onEliteDamaged(EliteMobDamagedEvent event) {
-            if (!(event.getEliteMobEntity() instanceof CustomBossEntity)) return;
-            if (((CustomBossEntity) event.getEliteMobEntity()).getPhaseBossEntity() == null) return;
-            ((CustomBossEntity) event.getEliteMobEntity()).getPhaseBossEntity().checkPhaseBossSwitch();
+            if (!(event.getEliteEntity() instanceof CustomBossEntity)) return;
+            if (((CustomBossEntity) event.getEliteEntity()).getPhaseBossEntity() == null) return;
+            ((CustomBossEntity) event.getEliteEntity()).getPhaseBossEntity().checkPhaseBossSwitch(event);
         }
 
         @EventHandler(priority = EventPriority.MONITOR)

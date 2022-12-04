@@ -6,7 +6,8 @@ import com.magmaguy.elitemobs.config.CustomConfigFields;
 import com.magmaguy.elitemobs.config.CustomConfigFieldsInterface;
 import com.magmaguy.elitemobs.config.MobCombatSettingsConfig;
 import com.magmaguy.elitemobs.items.customloottable.CustomLootTable;
-import com.magmaguy.elitemobs.powers.scripts.EliteScript;
+import com.magmaguy.elitemobs.mobconstructor.mobdata.aggressivemobs.EliteMobProperties;
+import com.magmaguy.elitemobs.powers.scripts.caching.EliteScriptBlueprint;
 import com.magmaguy.elitemobs.thirdparty.modelengine.CustomModel;
 import com.magmaguy.elitemobs.utils.WarningMessage;
 import lombok.Getter;
@@ -62,10 +63,10 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
     private List<String> onCombatLeaveCommands = null;
     @Getter
     @Setter
-    private List<String> uniqueLootList = null;
+    private List<Object> uniqueLootList = null;
     @Getter
     @Setter
-    private List<String> powers = null;
+    private List<Object> powers = null;
     @Getter
     @Setter
     private List<String> onDamageMessages = null;
@@ -84,6 +85,9 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
     @Getter
     @Setter
     private String mountedEntity = null;
+    @Getter
+    @Setter
+    private String customModelMountPointID = null;
     @Getter
     @Setter
     private String spawnMessage = null;
@@ -200,6 +204,13 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
     @Setter
     private String song = null;
 
+    private List<EliteScriptBlueprint> eliteScript = new ArrayList<>();
+    @Getter
+    @Setter
+    private String song = null;
+    @Getter
+    @Setter
+    private boolean alert = false;
 
     /**
      * Creates a new default pre-made Custom Boss. The boss is further customized through a builder pattern.
@@ -278,6 +289,11 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
     public void processConfigFields() {
         this.isEnabled = processBoolean("isEnabled", isEnabled, true, true);
         this.entityType = processEnum("entityType", entityType, EntityType.ZOMBIE, EntityType.class, true);
+        if (entityType == null) entityType = EntityType.ZOMBIE;
+        if (EliteMobProperties.getPluginData(entityType) == null) {
+            new WarningMessage("Failed to get plugin data for entity type " + entityType.toString() + " in file " + filename + " ! Defaulting to zombie.");
+            entityType = EntityType.ZOMBIE;
+        }
         this.instanced = processBoolean("instanced", instanced, false, false);
         this.name = translatable(filename, "name", processString("name", name, "Default Name", true));
         //Levels are strings because "dynamic" is a valid value
@@ -296,11 +312,11 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
         this.onCombatEnterCommands = processStringList("onCombatEnterCommands", onCombatEnterCommands, new ArrayList<>(), false);
         this.onCombatLeaveCommands = processStringList("onCombatLeaveCommands", onCombatLeaveCommands, new ArrayList<>(), false);
         this.deathMessages = translatable(filename, "deathMessages", processStringList("deathMessages", deathMessages, new ArrayList<>(), false));
-        this.uniqueLootList = processStringList("uniqueLootList", uniqueLootList, new ArrayList<>(), false);
+        this.uniqueLootList = processList("uniqueLootList", uniqueLootList, new ArrayList<>(), false);
         this.customLootTable = new CustomLootTable(this);
 
         //this can't be converted directly to an enum list because there are some special string features in here
-        this.powers = processStringList("powers", powers, new ArrayList<>(), false);
+        this.powers = processList("powers", powers, null, false);
         this.onDamageMessages = translatable(filename, "onDamageMessages", processStringList("onDamageMessages", onDamageMessages, new ArrayList<>(), false));
         this.onDamagedMessages = translatable(filename, "onDamagedMessages", processStringList("onDamagedMessages", onDamagedMessages, new ArrayList<>(), false));
         this.trails = processStringList("trails", trails, new ArrayList<>(), false);
@@ -308,6 +324,11 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
         this.phaseSpawnLocation = processString("phaseSpawnLocation", phaseSpawnLocation, null, false);
         this.locationMessage = translatable(filename, "locationMessage", processString("locationMessage", locationMessage, null, false));
         this.mountedEntity = processString("mountedEntity", mountedEntity, null, false);
+        if (mountedEntity != null && mountedEntity.equals(filename)) {
+            new WarningMessage("Custom Boss " + filename + " has itself for a mount. This makes an infinite loop of the boss mounting itself. The boss mount will not be used for safety reasons.");
+            this.mountedEntity = null;
+        }
+        this.customModelMountPointID = processString("customModelMountPointID", customModelMountPointID, null, false);
         this.spawnMessage = translatable(filename, "spawnMessage", processString("spawnMessage", spawnMessage, null, false));
         this.deathMessage = translatable(filename, "deathMessage", processString("deathMessage", deathMessage, null, false));
         this.escapeMessage = translatable(filename, "escapeMessage", processString("escapeMessage", escapeMessage, null, false));
@@ -341,9 +362,10 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
         this.movementSpeedAttribute = processDouble("movementSpeedAttribute", movementSpeedAttribute, null, false);
 
         rawEliteScripts = fileConfiguration.getConfigurationSection("eliteScript");
-        if (rawEliteScripts != null) eliteScript = EliteScript.parseBossScripts(rawEliteScripts);
+        if (rawEliteScripts != null) eliteScript = EliteScriptBlueprint.parseBossScripts(rawEliteScripts, this);
 
         this.song = processString("song", song, null, false);
+        this.alert = processBoolean("alert", alert, false, false);
     }
 
     public boolean isCustomModelExists() {
@@ -423,6 +445,14 @@ public class CustomBossesConfigFields extends CustomConfigFields implements Cust
                 "&e&l    3rd Damager: $damager3name &ewith $damager3damage damage!",
                 "&aSlayers: $players",
                 "&e&l---------------------------------------------");
+    }
+
+    public void saveFile() {
+        try {
+            fileConfiguration.save(file);
+        } catch (Exception ex) {
+            new WarningMessage("Failed to save boss file " + filename + "!");
+        }
     }
 
 }

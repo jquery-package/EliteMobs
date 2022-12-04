@@ -24,7 +24,6 @@ import com.magmaguy.elitemobs.gamemodes.zoneworld.ZoneWarner;
 import com.magmaguy.elitemobs.initialsetup.FirstTimeSetup;
 import com.magmaguy.elitemobs.instanced.MatchInstance;
 import com.magmaguy.elitemobs.instanced.arena.ArenaInstance;
-import com.magmaguy.elitemobs.instanced.dungeons.DungeonInstance;
 import com.magmaguy.elitemobs.instanced.dungeons.DungeonKillTargetObjective;
 import com.magmaguy.elitemobs.items.*;
 import com.magmaguy.elitemobs.items.customenchantments.*;
@@ -46,24 +45,10 @@ import com.magmaguy.elitemobs.playerdata.ElitePlayerInventory;
 import com.magmaguy.elitemobs.playerdata.PlayerStatsTracker;
 import com.magmaguy.elitemobs.playerdata.database.PlayerData;
 import com.magmaguy.elitemobs.playerdata.statusscreen.*;
-import com.magmaguy.elitemobs.powers.bosspowers.*;
-import com.magmaguy.elitemobs.powers.defensivepowers.InvulnerabilityArrow;
-import com.magmaguy.elitemobs.powers.defensivepowers.InvulnerabilityFallDamage;
-import com.magmaguy.elitemobs.powers.defensivepowers.InvulnerabilityKnockback;
-import com.magmaguy.elitemobs.powers.defensivepowers.ShieldWall;
-import com.magmaguy.elitemobs.powers.majorpowers.blaze.TrackingFireball;
-import com.magmaguy.elitemobs.powers.majorpowers.enderdragon.EnderDragonEmpoweredLightning;
-import com.magmaguy.elitemobs.powers.majorpowers.skeleton.SkeletonPillar;
-import com.magmaguy.elitemobs.powers.majorpowers.skeleton.SkeletonTrackingArrow;
-import com.magmaguy.elitemobs.powers.majorpowers.zombie.ZombieBloat;
-import com.magmaguy.elitemobs.powers.majorpowers.zombie.ZombieFriends;
-import com.magmaguy.elitemobs.powers.majorpowers.zombie.ZombieNecronomicon;
-import com.magmaguy.elitemobs.powers.majorpowers.zombie.ZombieParents;
+import com.magmaguy.elitemobs.powers.*;
 import com.magmaguy.elitemobs.powers.meta.Bombardment;
 import com.magmaguy.elitemobs.powers.meta.CombatEnterScanPower;
 import com.magmaguy.elitemobs.powers.meta.CustomSummonPower;
-import com.magmaguy.elitemobs.powers.miscellaneouspowers.*;
-import com.magmaguy.elitemobs.powers.offensivepowers.*;
 import com.magmaguy.elitemobs.powers.scripts.ScriptListener;
 import com.magmaguy.elitemobs.powers.specialpowers.EnderCrystalLightningRod;
 import com.magmaguy.elitemobs.powerstances.EffectEventHandlers;
@@ -102,6 +87,7 @@ public class EventsRegistrer {
         register(new FirstTimeSetup());
 
         register(new DungeonInstance.DungeonInstanceEvents());
+
         register(new DungeonKillTargetObjective.DungeonKillTargetObjectiveListener());
 
         register(new com.magmaguy.elitemobs.versionnotifier.VersionChecker.VersionCheckerEvents());
@@ -162,10 +148,6 @@ public class EventsRegistrer {
         register(new EliteMobDamagedByPlayerEvent.EliteMobDamagedByPlayerEventFilter());
         register(new EliteExplosionEvent.EliteExplosionEvents());
 
-        //Wormholes
-        //register(new WormholeEntry.WormholeEntryEvent());
-
-
         /*
         While these powers could be registered in a more automated way, I realized that it's also a bad way of getting
         silent errors without ever noticing, and ultimately the amount of manual input required is pretty minimal
@@ -177,22 +159,13 @@ public class EventsRegistrer {
         registerPower(new InvulnerabilityKnockback(), "invulnerability_knockback.yml");
         registerPower(new BonusLoot(), "bonus_loot.yml");
         registerPower(new Taunt(), "taunt.yml");
-        registerPower(new Corpse(), "corpse.yml");
         registerPower(new Implosion(), "implosion.yml");
         registerPower(new AttackArrow(), "attack_arrow.yml");
         registerPower(new ArrowFireworks(), "arrow_fireworks.yml");
-        registerPower(new AttackBlinding(), "attack_blinding.yml");
-        registerPower(new AttackFire(), "attack_fire.yml");
         registerPower(new AttackFireball(), "attack_fireball.yml");
         registerPower(new TrackingFireball.TrackingFireballEvents(), "tracking_fireball.yml");
-        registerPower(new AttackFreeze(), "attack_freeze.yml");
-        registerPower(new AttackGravity(), "attack_gravity.yml");
         registerPower(new AttackLightning(), "attack_lightning.yml");
-        registerPower(new AttackPoison(), "attack_poison.yml");
         registerPower(new AttackPush(), "attack_push.yml");
-        registerPower(new AttackWeakness(), "attack_weakness.yml");
-        registerPower(new AttackWeb(), "attack_web.yml");
-        registerPower(new AttackWither(), "attack_wither.yml");
         registerPower(new AttackVacuum(), "attack_vacuum.yml");
         registerPower(new ArrowRain(), "arrow_rain.yml");
         registerPower(new GroundPound(), "ground_pound.yml");
@@ -282,6 +255,7 @@ public class EventsRegistrer {
         register(new TeleportsPage.TeleportsPageEvents());
         register(new CommandsPage.CommandsPageEvents());
         register(new BossTrackingPage.BossTrackingPageEvents());
+        register(new InstancedDungeonBrowser.InstancedDungeonBrowserEvents());
 
         //Shops
         register(new ProceduralShopMenu.ProceduralShopMenuEvents());
@@ -295,6 +269,9 @@ public class EventsRegistrer {
         register(new RefinerMenu.RefinerMenuEvents());
         register(new EnhancementMenu.EnhancementMenuEvents());
         register(new UnbindMenu.UnbinderMenuEvents());
+
+        //loot menu
+        register(new LootMenu.LootMenuEvents());
 
         //Minecraft behavior canceller
         if (DefaultConfig.isPreventCreeperDamageToPassiveMobs())

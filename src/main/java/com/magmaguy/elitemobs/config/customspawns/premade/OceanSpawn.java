@@ -7,7 +7,11 @@ import org.bukkit.block.Biome;
 import java.util.List;
 
 public class OceanSpawn extends CustomSpawnConfigFields {
+<<<<<<< HEAD
     public OceanSpawn(){
+=======
+    public OceanSpawn() {
+>>>>>>> master
         super("ocean_spawn", true);
         setValidWorldEnvironments(List.of(World.Environment.NORMAL, World.Environment.CUSTOM));
         setValidBiomes(List.of(

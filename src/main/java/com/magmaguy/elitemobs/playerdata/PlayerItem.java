@@ -2,10 +2,13 @@ package com.magmaguy.elitemobs.playerdata;
 
 import com.magmaguy.elitemobs.MetadataHandler;
 import com.magmaguy.elitemobs.api.utils.EliteItemManager;
+import com.magmaguy.elitemobs.combatsystem.CombatSystem;
 import com.magmaguy.elitemobs.config.enchantments.EnchantmentsConfig;
+import com.magmaguy.elitemobs.instanced.dungeons.DungeonInstance;
 import com.magmaguy.elitemobs.items.ItemTagger;
 import com.magmaguy.elitemobs.items.customenchantments.*;
 import com.magmaguy.elitemobs.items.potioneffects.ElitePotionEffect;
+import com.magmaguy.elitemobs.playerdata.database.PlayerData;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -34,6 +37,7 @@ public class PlayerItem {
     private double protectionProjectile = 0;
     private double eliteDamage = 0;
     private double blastProtection = 0;
+    private double loudStrikesBonus = 0;
 
     /**
      * Stores an instance of the custom EliteMobs values of what a player is wearing. This is used to reduce the amount
@@ -75,32 +79,41 @@ public class PlayerItem {
         this.itemStack = itemStack;
         if (equipmentSlot.equals(EquipmentSlot.MAINHAND)) {
             this.itemTier = (int) Math.round(EliteItemManager.getWeaponLevel(itemStack));
-            this.eliteDamage = EliteItemManager.getBaseDamage(itemStack) + EliteItemManager.getEliteDamage(itemStack);
-        } else {
+            this.eliteDamage = EliteItemManager.getEliteDamageFromEliteAttributes(itemStack);
+        } else
             this.itemTier = (int) Math.round(EliteItemManager.getArmorLevel(itemStack));
-            this.eliteDamageReduction = EliteItemManager.getEliteDefense(itemStack) + EliteItemManager.getBonusEliteDefense(itemStack);
-            this.protectionProjectile = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.PROTECTION_PROJECTILE.getKey());
-            this.blastProtection = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.PROTECTION_EXPLOSIONS.getKey());
-        }
         this.continuousPotionEffects = ItemTagger.getPotionEffects(itemStack.getItemMeta(), ItemTagger.continuousPotionEffectKey);
         this.onHitPotionEffects = ItemTagger.getPotionEffects(itemStack.getItemMeta(), ItemTagger.onHitPotionEffectKey);
 
-        if (equipmentSlot.equals(EquipmentSlot.MAINHAND)) {
-            this.damageArthropodsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.DAMAGE_ARTHROPODS.getKey());
-            this.damageUndeadLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.DAMAGE_UNDEAD.getKey());
-            this.critChance = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, CriticalStrikesEnchantment.key)) / 10D;
-            this.lightningChance = Math.pow(ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, LightningEnchantment.key)), 2) / 1000D;
-        }
-
-        if (equipmentSlot.equals(EquipmentSlot.BOOTS)) {
-            this.plasmaBootsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, PlasmaBootsEnchantment.key));
-        }
-
+        //Enchantments are global, any inventory slot will add to the total of any enchantment
+        this.eliteDamageReduction = EliteItemManager.getEliteDefense(itemStack) + EliteItemManager.getBonusEliteDefense(itemStack);
+        this.protectionProjectile = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.PROTECTION_PROJECTILE.getKey());
+        this.blastProtection = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.PROTECTION_EXPLOSIONS.getKey());
+        this.damageArthropodsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.DAMAGE_ARTHROPODS.getKey());
+        this.damageUndeadLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.DAMAGE_UNDEAD.getKey());
+        this.critChance = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, CriticalStrikesEnchantment.key)) / 10D;
+        this.lightningChance = Math.pow(ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, LightningEnchantment.key)), 2) / 1000D;
+        this.plasmaBootsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, PlasmaBootsEnchantment.key));
         this.hunterChance = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, HunterEnchantment.key)) * EnchantmentsConfig.getEnchantment("hunter.yml").getFileConfiguration().getDouble("hunterSpawnBonus");
-
         this.earthquakeLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, EarthquakeEnchantment.key));
+        this.thornsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.THORNS.getKey());
+        this.loudStrikesBonus = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, LoudStrikesEnchantment.key)) / 3d;
+        eliteDamage += EliteItemManager.getEliteDamageFromEnchantments(itemStack);
 
-        checkArmorSpecificFeatures();
+        //Level sync for instanced dungeons - limits the max level of the item
+        if (PlayerData.getMatchInstance(player) != null &&
+                PlayerData.getMatchInstance(player) instanceof DungeonInstance dungeonInstance &&
+                dungeonInstance.getLevelSync() > 0) {
+            //Recalculate damage
+            if (equipmentSlot.equals(EquipmentSlot.MAINHAND)) {
+                double syncedDPS = CombatSystem.DPS_PER_LEVEL * dungeonInstance.getLevelSync();
+                double currentDPS = EliteItemManager.getDPS(EliteItemManager.getBaseDamage(itemStack) + EliteItemManager.getEliteDamageFromEliteAttributes(itemStack), EliteItemManager.getAttackSpeed(itemStack));
+                if (currentDPS > syncedDPS)
+                    this.eliteDamage = syncedDPS * (1 / EliteItemManager.getAttackSpeed(itemStack)) + EliteItemManager.getEliteDamageFromEnchantments(itemStack) - EliteItemManager.getBaseDamage(itemStack);
+            }
+            this.eliteDamageReduction = Math.min(dungeonInstance.getLevelSync(), EliteItemManager.getEliteDefense(itemStack)) / 4d +
+                    EliteItemManager.getBonusEliteDefense(itemStack);
+        }
 
         return true;
 
@@ -108,7 +121,6 @@ public class PlayerItem {
 
     private boolean fillNullItem() {
         itemStack = null;
-        itemTier = 0;
         continuousPotionEffects = new ArrayList<>();
         onHitPotionEffects = new ArrayList<>();
         damageArthropodsLevel = 0;
@@ -118,101 +130,89 @@ public class PlayerItem {
         critChance = 0;
         hunterChance = 0;
         lightningChance = 0;
+        earthquakeLevel = 0;
+        eliteDamageReduction = 0;
+        protectionProjectile = 0;
+        eliteDamage = 0;
+        blastProtection = 0;
+        loudStrikesBonus = 0;
         return true;
     }
 
-    private void checkArmorSpecificFeatures() {
-        if (!(equipmentSlot.equals(EquipmentSlot.HELMET) ||
-                equipmentSlot.equals(EquipmentSlot.CHESTPLATE) ||
-                equipmentSlot.equals(EquipmentSlot.LEGGINGS) ||
-                equipmentSlot.equals(EquipmentSlot.BOOTS))) return;
-        this.thornsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.THORNS.getKey());
-    }
-
     public int getTier(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.itemTier;
     }
 
     public double getEliteDamage(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.eliteDamage;
     }
 
     public double getEliteDefense(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.eliteDamageReduction;
     }
 
     public double getProtectionProjectile(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.protectionProjectile;
     }
 
     public double getBlastProtection(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.blastProtection;
     }
 
     public ArrayList<ElitePotionEffect> getContinuousPotionEffects(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.continuousPotionEffects;
     }
 
     public ArrayList<ElitePotionEffect> getOnHitPotionEffects(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.onHitPotionEffects;
     }
 
     public int getDamageArthropodsLevel(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.damageArthropodsLevel;
     }
 
     public int getDamageUndeadLevel(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.damageUndeadLevel;
     }
 
     public double getCritChance(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.critChance;
     }
 
     public double getHunterChance(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.hunterChance;
     }
 
     public double getLightningChance(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.lightningChance;
     }
 
     public double getPlasmaBootsLevel(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.plasmaBootsLevel;
     }
 
     public double getEarthquakeLevel(ItemStack itemStack, boolean update) {
-        if (update)
-            fullUpdate(itemStack);
+        if (update) fullUpdate(itemStack);
         return this.earthquakeLevel;
     }
 
+    public double getLoudStrikesBonus(ItemStack itemStack, boolean update) {
+        if (update) fullUpdate(itemStack);
+        return this.loudStrikesBonus;
+    }
 
     public enum EquipmentSlot {
         HELMET,

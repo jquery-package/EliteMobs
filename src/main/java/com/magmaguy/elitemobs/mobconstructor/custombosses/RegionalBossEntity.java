@@ -11,7 +11,7 @@ import com.magmaguy.elitemobs.entitytracker.EntityTracker;
 import com.magmaguy.elitemobs.mobconstructor.PersistentMovingEntity;
 import com.magmaguy.elitemobs.mobconstructor.PersistentObject;
 import com.magmaguy.elitemobs.mobconstructor.custombosses.transitiveblocks.TransitiveBlock;
-import com.magmaguy.elitemobs.powers.bosspowers.SpiritWalk;
+import com.magmaguy.elitemobs.powers.SpiritWalk;
 import com.magmaguy.elitemobs.utils.ConfigurationLocation;
 import com.magmaguy.elitemobs.utils.WarningMessage;
 import lombok.Getter;
@@ -20,8 +20,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -174,16 +172,29 @@ public class RegionalBossEntity extends CustomBossEntity implements PersistentOb
         queueSpawn(false);
     }
 
+    private BukkitTask respawnTask = null;
+
     public void queueSpawn(boolean silent) {
         RegionalBossEntity regionalBossEntity = this;
         this.isRespawning = true;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> {
-            if (phaseBossEntity != null) phaseBossEntity.silentReset();
-            ticksBeforeRespawn = 0;
-            //Reminder: this might not spawn a living entity as it gets queued for when the chunk loads
-            regionalBossEntity.spawn(silent);
-            super.getDamagers().clear();
-        }, ticksBeforeRespawn);
+        respawnTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (phaseBossEntity != null) phaseBossEntity.silentReset();
+                ticksBeforeRespawn = 0;
+                //Reminder: this might not spawn a living entity as it gets queued for when the chunk loads
+                regionalBossEntity.spawn(silent);
+                regionalBossEntity.getDamagers().clear();
+            }
+        }.runTaskLater(MetadataHandler.PLUGIN, ticksBeforeRespawn);
+    }
+
+    public void forceRespawn() {
+        if (respawnTask == null) return;
+        respawnTask.cancel();
+        ticksBeforeRespawn = 0;
+        spawn(false);
+        getDamagers().clear();
     }
 
     public void respawn() {
@@ -237,10 +248,8 @@ public class RegionalBossEntity extends CustomBossEntity implements PersistentOb
         this.isRespawning = false;
         if (!ItemSettingsConfig.isRegionalBossesDropVanillaLoot())
             super.vanillaLoot = false;
-        if (livingEntity != null) {
+        if (livingEntity != null)
             checkLeash();
-            getLivingEntity().addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 4));
-        }
     }
 
     @Override
@@ -259,7 +268,8 @@ public class RegionalBossEntity extends CustomBossEntity implements PersistentOb
                 break;
             case DEATH:
             case BOSS_TIMEOUT:
-                respawn();
+                if (!(this instanceof InstancedBossEntity))
+                    respawn();
                 break;
             default:
                 break;

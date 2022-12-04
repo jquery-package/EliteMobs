@@ -20,7 +20,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -122,6 +124,22 @@ public class CustomSpawn {
         new BukkitRunnable() {
             @Override
             public void run() {
+                if (spawnLocation == null) {
+                    Bukkit.getScheduler().runTaskLater(MetadataHandler.PLUGIN, () -> generateCustomSpawn(), 1);
+                    cancel();
+                    return;
+                }
+                //One last check
+                //Last line of defense - spawn a test mob. If some uknown protection system prevents spawning it should prevent this
+                LivingEntity testEntity = spawnLocation.getWorld().spawn(spawnLocation, Zombie.class);
+                if (!testEntity.isValid()) {
+                    spawnLocation = null;
+                    //Run 1 tick later to make sure it doesn't get stuck trying over and over again in the same tick
+                    Bukkit.getScheduler().runTaskLater(MetadataHandler.PLUGIN, () -> generateCustomSpawn(), 1);
+                    cancel();
+                    return;
+                }
+                testEntity.remove();
 
                 if (!keepTrying) cancel();
 
@@ -147,6 +165,15 @@ public class CustomSpawn {
     }
 
     private void generateCustomSpawn() {
+        //If the global cooldown if enforced and this is a timed event wait for the cd to be over
+        /*
+        if (timedEvent != null && System.currentTimeMillis() < TimedEvent.getNextEventTrigger()) {
+            Bukkit.getScheduler().scheduleAsyncDelayedTask(MetadataHandler.PLUGIN, this::generateCustomSpawn, 20 * 60L);
+            return;
+        }
+
+         */
+
         int maxTries = 100;
         int tries = 0;
         while (tries < maxTries && spawnLocation == null) {
@@ -176,8 +203,7 @@ public class CustomSpawn {
                 }));
             }
         } else {
-            if (isEvent)
-                new DebugMessage("Spawned bosses for event after " + allTries + " tries");
+            if (isEvent) new DebugMessage("Spawned bosses for event after " + allTries + " tries");
             spawn();
         }
     }

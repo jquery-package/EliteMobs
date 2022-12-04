@@ -27,15 +27,15 @@ import java.util.List;
 
 public class EliteItemLore {
 
-    @Getter
-    private ItemStack itemStack;
-    private ItemMeta itemMeta;
     private final List<String> vanillaEnchantmentsLore = new ArrayList<>();
     private final HashMap<Enchantment, Integer> eliteVanillaEnchantments = new HashMap<>();
     private final ArrayList<String> eliteVanillaEnchantmentsLore = new ArrayList<>();
     private final HashMap<CustomEnchantment, Integer> customEnchantments = new HashMap<>();
     private final ArrayList<String> customEnchantmentLore = new ArrayList<>();
     private final List<String> potionListLore = new ArrayList<>();
+    @Getter
+    private ItemStack itemStack;
+    private ItemMeta itemMeta;
     private List<String> lore;
     private String soulbindInfo = null;
     private boolean showItemWorth;
@@ -71,12 +71,13 @@ public class EliteItemLore {
 
         constructSoulbindEntry();
         constructSoulboundOwner();
-        constructItemWorth();
         constructItemSource();
         constructCustomLore();
         constructPrestigeLevel();
 
         constructPotionEffects();
+
+        constructItemWorth();
 
         writeNewLore();
 
@@ -255,7 +256,7 @@ public class EliteItemLore {
             } else if (string.contains("$ifCustomEnchantments")) {
                 if (!customEnchantments.isEmpty())
                     lore.add(string.replace("$ifCustomEnchantments", ""));
-            } else
+            } else if (!string.isEmpty())
                 lore.add(ChatColorConverter.convert(string));
         }
     }

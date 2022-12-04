@@ -49,6 +49,10 @@ public class CustomBossBossBar {
     }
 
     public void addTrackingPlayer(Player player) {
+        if (!customBossEntity.exists()) {
+            remove();
+            return;
+        }
         if (!trackingPlayers.contains(player))
             trackingPlayers.add(player);
         else
@@ -66,6 +70,7 @@ public class CustomBossBossBar {
         bossBars.clear();
         trackingPlayers.clear();
         bossBarUpdater.cancel();
+        CustomBossEntity.trackableCustomBosses.remove(customBossEntity);
     }
 
     /**
@@ -111,6 +116,7 @@ public class CustomBossBossBar {
                 //This can happen on phase changes where boss bars might not be configured on subsequent entities
                 if (!customBossEntity.exists() || customBossEntity.getCustomBossesConfigFields().getLocationMessage() == null) {
                     cancel();
+                    remove();
                     return;
                 }
 
@@ -141,17 +147,24 @@ public class CustomBossBossBar {
         }.runTaskTimer(MetadataHandler.PLUGIN, 0, 5);
     }
 
+    private boolean warned = false;
+
     private void createBossBar(Player player) {
         String locationString = (int) customBossEntity.getLocation().getX() +
                 ", " + (int) customBossEntity.getLocation().getY() +
                 ", " + (int) customBossEntity.getLocation().getZ();
         BossBar bossBar = Bukkit.createBossBar(bossBarMessage(player, locationString), BarColor.GREEN, BarStyle.SOLID, BarFlag.PLAY_BOSS_MUSIC);
 
+        if (!customBossEntity.exists()) return;
+
         if (customBossEntity.getHealth() / customBossEntity.getMaxHealth() > 1 || customBossEntity.getHealth() / customBossEntity.getMaxHealth() < 0) {
-            new WarningMessage("The following boss had more health than it should: " + customBossEntity.getName());
-            new WarningMessage("This is a problem usually caused by running more than one plugin that modifies mob health!" +
-                    " EliteMobs can't fix this issue because it is being caused by another plugin." +
-                    " If you want EliteMobs to work correctly, find a way to fix this issue with whatever other plugin is causing it.");
+            if (!warned) {
+                new WarningMessage("The following boss had more health than it should: " + customBossEntity.getName());
+                new WarningMessage("This is a problem usually caused by running more than one plugin that modifies mob health!" +
+                        " EliteMobs can't fix this issue because it is being caused by another plugin." +
+                        " If you want EliteMobs to work correctly, find a way to fix this issue with whatever other plugin is causing it.");
+                warned = true;
+            }
             return;
         }
 

@@ -51,6 +51,11 @@ public class PlayerPotionEffects implements Listener {
 
     private void doContinuousPotionEffect(ElitePotionEffect elitePotionEffect, Player player) {
 
+        //This one doesn't work
+        if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.ABSORPTION)) return;
+        if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.HEALTH_BOOST)) return;
+
+
         //if the player has a higher amplifier potion effect, ignore. If it's the same, reapply to refresh the effect
         if (player.hasPotionEffect(elitePotionEffect.getPotionEffect().getType()) &&
                 player.getPotionEffect(elitePotionEffect.getPotionEffect().getType()).getAmplifier() > elitePotionEffect.getPotionEffect().getAmplifier())
@@ -99,6 +104,9 @@ public class PlayerPotionEffects implements Listener {
     }
 
     private void doOnHitPotionEffect(ElitePotionEffect elitePotionEffect, Player player, LivingEntity damagee) {
+        //This one doesn't work
+        if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.ABSORPTION)) return;
+        if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.HEALTH_BOOST)) return;
         switch (elitePotionEffect.getTarget()) {
             case SELF:
 
@@ -116,7 +124,9 @@ public class PlayerPotionEffects implements Listener {
                     Harm.doHarm(player, elitePotionEffect);
                     return;
                 }
-                if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.LEVITATION)) {
+                if (elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.LEVITATION) ||
+                        elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.SLOW) ||
+                        elitePotionEffect.getPotionEffect().getType().equals(PotionEffectType.BLINDNESS)) {
                     EliteEntity eliteEntity = EntityTracker.getEliteMobEntity(damagee);
                     if (eliteEntity != null && eliteEntity.getHealthMultiplier() > 1)
                         return;
