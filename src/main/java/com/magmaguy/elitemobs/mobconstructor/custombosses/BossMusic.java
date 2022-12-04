@@ -133,6 +133,7 @@ public class BossMusic {
                 }
             }.runTaskTimer(MetadataHandler.PLUGIN, durationTicks, durationTicks2);
         }
+
         players.put(player, songTask);
     }
 }
