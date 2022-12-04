@@ -86,7 +86,7 @@ public class ElitePower {
             eliteEntity.getElitePowers().addAll(EliteScript.generateBossScripts(configFields.getEliteScriptBlueprints()));
     }
 
-    private static void initializePowers() {
+    public static void initializePowers() {
         List<Class<?>> classes;
         try {
             classes = ClassFinder.find("com.magmaguy.elitemobs.powers");

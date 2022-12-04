@@ -43,19 +43,10 @@ public abstract class MatchInstance {
     protected Location lobbyLocation = null;
     protected Location startLocation;
     protected Location exitLocation;
-    protected HashMap<String, Location> spawnPoints = new HashMap<>();
-    private Location corner1;
-    private Location corner2;
-    private int minPlayers;
-    private int maxPlayers;
-    private int minX;
-    private int maxX;
-    private int minY;
-    private int maxY;
-    private int minZ;
-    private int maxZ;
-    private World world;
-    private boolean cylindricalArena;
+    protected int minPlayers;
+    protected int maxPlayers;
+    protected World world;
+
 
     public MatchInstance(Location startLocation, Location exitLocation, int minPlayers, int maxPlayers) {
         this.startLocation = startLocation;
